@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -12,6 +12,8 @@ import type { ScheduleEvent } from '../../types';
 export function CalendarView() {
   const events = useStore((s) => s.events);
   const children = useStore((s) => s.children);
+
+  const isMobile = useMemo(() => window.innerWidth < 768, []);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogStart, setDialogStart] = useState<string>();
@@ -59,16 +61,24 @@ export function CalendarView() {
   };
 
   return (
-    <div className="flex-1 p-4 overflow-hidden">
+    <div className="flex-1 p-2 sm:p-4 overflow-hidden">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
+        initialView={isMobile ? 'timeGridDay' : 'timeGridWeek'}
         locale={huLocale}
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay',
-        }}
+        headerToolbar={
+          isMobile
+            ? {
+                left: 'prev,next',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+              }
+            : {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay',
+              }
+        }
         selectable={true}
         selectMirror={true}
         select={handleSelect}
@@ -81,8 +91,9 @@ export function CalendarView() {
         height="100%"
         expandRows={true}
         stickyHeaderDates={true}
-        dayMaxEvents={3}
+        dayMaxEvents={isMobile ? 2 : 3}
         eventDisplay="block"
+        longPressDelay={300}
       />
 
       <EventDialog
